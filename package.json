@@ -8,8 +8,6 @@
   },
   "dependencies": {
     "aedes": "^0.48.0",
-    "aedes-persistence": "^2.2.0",
-    "aedes-server-factory": "^1.0.0",
     "net": "^1.0.2"
   }
 }
