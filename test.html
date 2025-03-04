@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML 與 App Inventor 互動</title>
+</head>
+<body>
+    <h2>HTML 與 App Inventor 互動範例</h2>
+    
+    <p>數值: <span id="displayValue">0</span></p>
+    <button onclick="startSending()">開始傳送</button>
+    <button onclick="stopSending()">停止傳送</button>
+
+    <script>
+        let value = 0;
+        let intervalId = null;
+
+        // 每秒增加數值並傳送到 App Inventor
+        function startSending() {
+            if (intervalId === null) { // 避免重複啟動
+                intervalId = setInterval(() => {
+                    value++;
+                    document.getElementById("displayValue").textContent = value;
+                    
+                    if (window.AppInventor) {
+                        window.AppInventor.setWebViewString(value.toString());
+                    } else {
+                        console.log("App Inventor 未連接，數值：" + value);
+                    }
+                }, 1000); // 每秒執行一次
+            }
+        }
+
+        // 停止傳送數值
+        function stopSending() {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+
+        // 從 App Inventor 接收數值並顯示
+        function receiveFromAppInventor(newValue) {
+            value = parseInt(newValue) || 0; // 轉換為數字
+            document.getElementById("displayValue").textContent = value;
+        }
+    </script>
+</body>
+</html>
