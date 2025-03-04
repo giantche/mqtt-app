@@ -31,6 +31,9 @@
         client.on("connect", function () {
             console.log("MQTT 連線成功！");
             subscribeTopic();
+            if (window.AppInventor) {
+                window.AppInventor.setWebViewString("MQTT 連線成功！");
+            }
         });
 
         client.on("message", function (topic, message) {
