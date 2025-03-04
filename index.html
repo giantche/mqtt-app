@@ -27,7 +27,9 @@
         // 連線到 MQTT Broker
        // const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
         const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
-
+        if (window.AppInventor) {
+            window.AppInventor.setWebViewString("測試！");
+        }
         client.on("connect", function () {
             console.log("MQTT 連線成功！");
             subscribeTopic();
