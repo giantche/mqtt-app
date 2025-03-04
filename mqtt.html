@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Web 客戶端</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+    <h2>MQTT Web 客戶端</h2>
+    
+    <label>MQTT 主題：</label>
+    <input type="text" id="topic" value="test/topic">
+    <button onclick="subscribeTopic()">訂閱</button>
+    <button onclick="unsubscribeTopic()">取消訂閱</button>
+    
+    <br><br>
+    
+    <label>發送訊息：</label>
+    <input type="text" id="message">
+    <button onclick="publishMessage()">發送</button>
+
+    <h3>接收到的訊息：</h3>
+    <div id="messages" style="border:1px solid #000; padding:10px; height:150px; overflow:auto;"></div>
+
+    <script>
+        // 連線到 MQTT Broker
+        const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+
+        client.on("connect", function () {
+            console.log("MQTT 連線成功！");
+        });
+
+        client.on("message", function (topic, message) {
+            let msgBox = document.getElementById("messages");
+            msgBox.innerHTML += `<p><strong>${topic}:</strong> ${message.toString()}</p>`;
+            msgBox.scrollTop = msgBox.scrollHeight;
+        });
+
+        function subscribeTopic() {
+            let topic = document.getElementById("topic").value;
+            client.subscribe(topic, function (err) {
+                if (!err) {
+                    alert("成功訂閱：" + topic);
+                }
+            });
+        }
+
+        function unsubscribeTopic() {
+            let topic = document.getElementById("topic").value;
+            client.unsubscribe(topic, function (err) {
+                if (!err) {
+                    alert("已取消訂閱：" + topic);
+                }
+            });
+        }
+
+        function publishMessage() {
+            let topic = document.getElementById("topic").value;
+            let message = document.getElementById("message").value;
+            client.publish(topic, message);
+            alert("已發送：" + message);
+        }
+    </script>
+</body>
+</html>
