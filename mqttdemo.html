@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MQTT 多燈控制</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { text-align: center; font-family: Arial, sans-serif; }
+    .light-box {
+      display: inline-block;
+      margin: 20px;
+    }
+    .light {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 10px auto;
+      background: gray;
+    }
+    .on.red { background: red; }
+    .on.yellow { background: yellow; }
+    .on.blue { background: blue; }
+    .on.green { background: green; }
+    .topic-label {
+      margin: 5px auto;
+      font-size: 14px;
+      color: #333;
+      width: 120px;
+      border: 1px solid #aaa;
+      padding: 5px;
+      background-color: #f0f0f0;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>MQTT 多燈控制</h1>
+
+  <div class="light-box">
+    <div id="light-red" class="light"></div>
+    <div class="topic-label" id="label-red">home/light/red</div>
+    <button onclick="toggleLight('red')">切換紅燈</button>
+  </div>
+
+  <div class="light-box">
+    <div id="light-yellow" class="light"></div>
+    <div class="topic-label" id="label-yellow">home/light/yellow</div>
+    <button onclick="toggleLight('yellow')">切換黃燈</button>
+  </div>
+
+  <div class="light-box">
+    <div id="light-blue" class="light"></div>
+    <div class="topic-label" id="label-blue">home/light/blue</div>
+    <button onclick="toggleLight('blue')">切換藍燈</button>
+  </div>
+
+  <div class="light-box">
+    <div id="light-green" class="light"></div>
+    <div class="topic-label" id="label-green">home/light/green</div>
+    <button onclick="toggleLight('green')">切換綠燈</button>
+  </div>
+
+  <script>
+    const client = mqtt.connect("wss://test.mosquitto.org:8081");
+
+    const topics = {
+      red: "home/light/red",
+      yellow: "home/light/yellow",
+      blue: "home/light/blue",
+      green: "home/light/green"
+    };
+
+    const lightStates = {
+      red: false,
+      yellow: false,
+      blue: false,
+      green: false
+    };
+
+    client.on("connect", () => {
+      console.log("MQTT 已連線");
+
+      // 訂閱所有燈的主題
+      for (let color in topics) {
+        client.subscribe(topics[color], (err) => {
+          if (!err) {
+            console.log(`已訂閱: ${topics[color]}`);
+          }
+        });
+      }
+    });
+
+    client.on("message", (topic, message) => {
+      const msg = message.toString();
+      for (let color in topics) {
+        if (topics[color] === topic) {
+          const light = document.getElementById(`light-${color}`);
+          if (msg === "ON") {
+            light.classList.add("on", color);
+            lightStates[color] = true;
+          } else if (msg === "OFF") {
+            light.classList.remove("on", color);
+            lightStates[color] = false;
+          }
+        }
+      }
+    });
+
+    function toggleLight(color) {
+      const topic = topics[color];
+      const newState = lightStates[color] ? "OFF" : "ON";
+      client.publish(topic, newState);
+      console.log(`已發送 ${newState} 到 ${topic}`);
+    }
+  </script>
+</body>
+</html>
