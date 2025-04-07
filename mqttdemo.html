@@ -24,17 +24,20 @@
     .on.green { background: green; }
     .topic-label {
       margin: 5px auto;
-      font-size: 14px;
+      font-size: 16px;
       color: #333;
       width: 120px;
       border: 1px solid #aaa;
       padding: 5px;
       background-color: #f0f0f0;
     }
-    button {
+    input, button {
       padding: 8px 16px;
       margin-top: 5px;
-      font-size: 14px;
+      font-size: 16px;
+    }
+    #topic-input-section {
+      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -42,40 +45,40 @@
 
   <h1>MQTT 多燈控制</h1>
 
+  <div id="topic-input-section">
+    <input type="text" id="user-prefix" placeholder="輸入名稱 (如: jason)" />
+    <button onclick="setPrefix()">設定名稱並重新訂閱</button>
+  </div>
+
   <div class="light-box">
     <div id="light-red" class="light"></div>
-    <div class="topic-label" id="label-red">home/light/red</div>
+    <div class="topic-label" id="label-red"></div>
     <button onclick="toggleLight('red')">切換紅燈</button>
   </div>
 
   <div class="light-box">
     <div id="light-yellow" class="light"></div>
-    <div class="topic-label" id="label-yellow">home/light/yellow</div>
+    <div class="topic-label" id="label-yellow"></div>
     <button onclick="toggleLight('yellow')">切換黃燈</button>
   </div>
 
   <div class="light-box">
     <div id="light-blue" class="light"></div>
-    <div class="topic-label" id="label-blue">home/light/blue</div>
+    <div class="topic-label" id="label-blue"></div>
     <button onclick="toggleLight('blue')">切換藍燈</button>
   </div>
 
   <div class="light-box">
     <div id="light-green" class="light"></div>
-    <div class="topic-label" id="label-green">home/light/green</div>
+    <div class="topic-label" id="label-green"></div>
     <button onclick="toggleLight('green')">切換綠燈</button>
   </div>
 
   <script>
     const client = mqtt.connect("wss://test.mosquitto.org:8081");
 
-    const topics = {
-      red: "home/light/red",
-      yellow: "home/light/yellow",
-      blue: "home/light/blue",
-      green: "home/light/green"
-    };
-
+    let prefix = "home"; // 預設 prefix
+    let topics = {};     // 將依據 prefix 更新
     const lightStates = {
       red: false,
       yellow: false,
@@ -83,10 +86,20 @@
       green: false
     };
 
-    client.on("connect", () => {
-      console.log("MQTT 已連線");
+    function updateTopics() {
+      topics = {
+        red: `${prefix}/light/red`,
+        yellow: `${prefix}/light/yellow`,
+        blue: `${prefix}/light/blue`,
+        green: `${prefix}/light/green`
+      };
 
-      // 訂閱所有燈的主題
+      for (let color in topics) {
+        document.getElementById(`label-${color}`).innerText = topics[color];
+      }
+    }
+
+    function subscribeAll() {
       for (let color in topics) {
         client.subscribe(topics[color], (err) => {
           if (!err) {
@@ -94,6 +107,32 @@
           }
         });
       }
+    }
+
+    function unsubscribeAll() {
+      for (let color in topics) {
+        client.unsubscribe(topics[color], (err) => {
+          if (!err) {
+            console.log(`已取消訂閱: ${topics[color]}`);
+          }
+        });
+      }
+    }
+
+    function setPrefix() {
+      const input = document.getElementById("user-prefix").value.trim();
+      if (input) {
+        unsubscribeAll();
+        prefix = input;
+        updateTopics();
+        subscribeAll();
+      }
+    }
+
+    client.on("connect", () => {
+      console.log("MQTT 已連線");
+      updateTopics();
+      subscribeAll();
     });
 
     client.on("message", (topic, message) => {
