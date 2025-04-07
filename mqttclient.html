@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>MQTT 燈光控制面板</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f0f0f0; }
+    h2 { text-align: center; }
+    .container { max-width: 600px; margin: auto; }
+    .input-group { margin-bottom: 20px; text-align: center; }
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    button {
+      padding: 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+    }
+    .on { background-color: #4CAF50; }
+    .off { background-color: #f44336; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>MQTT 燈光控制面板</h2>
+  <div class="input-group">
+    <label for="topicPrefix">主題前綴：</label>
+    <input type="text" id="topicPrefix" value="home">
+  </div>
+  <div class="grid">
+    <button class="on" onclick="publishMessage('light/red', 'ON')">紅燈 ON</button>
+    <button class="off" onclick="publishMessage('light/red', 'OFF')">紅燈 OFF</button>
+    <button class="on" onclick="publishMessage('light/blue', 'ON')">藍燈 ON</button>
+    <button class="off" onclick="publishMessage('light/blue', 'OFF')">藍燈 OFF</button>
+    <button class="on" onclick="publishMessage('light/yellow', 'ON')">黃燈 ON</button>
+    <button class="off" onclick="publishMessage('light/yellow', 'OFF')">黃燈 OFF</button>
+    <button class="on" onclick="publishMessage('light/green', 'ON')">綠燈 ON</button>
+    <button class="off" onclick="publishMessage('light/green', 'OFF')">綠燈 OFF</button>
+  </div>
+</div>
+
+<script>
+  // 建立 MQTT 連線
+  const client = mqtt.connect('wss://test.mosquitto.org:8081/mqtt');
+
+  client.on('connect', () => {
+    console.log('已連線到 MQTT broker');
+  });
+
+  function publishMessage(topicSuffix, message) {
+    const topicPrefix = document.getElementById('topicPrefix').value.trim();
+    const fullTopic = `${topicPrefix}/${topicSuffix}`;
+    client.publish(fullTopic, message);
+    console.log(`已發送 ${message} 到 ${fullTopic}`);
+  }
+</script>
+
+</body>
+</html>
